@@ -1,0 +1,1036 @@
+openapi: 3.0.3
+info:
+  title: Cerana Labs Founder Matching Platform API
+  description: API for connecting early-stage founders with advisors, design partners, and early customers
+  version: 1.0.0
+  contact:
+    name: Cerana Labs
+    url: https://ceranalabs.com
+    email: api@ceranalabs.com
+
+servers:
+  - url: https://api.ceranalabs.com/v1
+    description: Production server
+  - url: https://staging-api.ceranalabs.com/v1
+    description: Staging server
+
+security:
+  - ClerkAuth: []
+
+paths:
+  # Authentication & User Management
+  /auth/signup:
+    post:
+      summary: Sign up new user
+      description: Create a new user account and send verification email
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                role:
+                  type: string
+                  enum: [founder, investor]
+              required:
+                - email
+                - role
+      responses:
+        '201':
+          description: User created successfully, verification email sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                    format: uuid
+                  verificationSent:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Email already exists
+
+  /auth/verify:
+    post:
+      summary: Verify email and complete signup
+      description: Verify email token and return authentication token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+              required:
+                - token
+      responses:
+        '200':
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authToken:
+                    type: string
+                  user:
+                    oneOf:
+                      - $ref: '#/components/schemas/FounderProfile'
+                      - $ref: '#/components/schemas/InvestorProfile'
+                  userRole:
+                    type: string
+                    enum: [founder, investor]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Invalid or expired token
+
+  /auth/me:
+    get:
+      summary: Get current user profile
+      description: Retrieve the authenticated user's profile information
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/FounderProfile'
+                  - $ref: '#/components/schemas/InvestorProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      summary: Logout user
+      description: Invalidate the current authentication token
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Successfully logged out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+
+  /founders:
+    post:
+      summary: Create or update founder profile
+      description: Create a new founder profile or update existing profile
+      tags:
+        - Founders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FounderProfileInput'
+      responses:
+        '201':
+          description: Founder profile created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FounderProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /founders/{founderId}:
+    get:
+      summary: Get founder profile by ID
+      description: Retrieve a specific founder's profile
+      tags:
+        - Founders
+      parameters:
+        - name: founderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Founder profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FounderProfile'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update founder profile
+      description: Update an existing founder profile
+      tags:
+        - Founders
+      parameters:
+        - name: founderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FounderProfileInput'
+      responses:
+        '200':
+          description: Founder profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FounderProfile'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Startup Ideas
+  /ideas:
+    post:
+      summary: Submit startup idea
+      description: Submit a new startup idea for analysis and matching
+      tags:
+        - Ideas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartupIdeaInput'
+      responses:
+        '201':
+          description: Startup idea submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartupIdea'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /ideas/{ideaId}:
+    get:
+      summary: Get startup idea by ID
+      description: Retrieve a specific startup idea
+      tags:
+        - Ideas
+      parameters:
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Startup idea retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartupIdea'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update startup idea
+      description: Update an existing startup idea
+      tags:
+        - Ideas
+      parameters:
+        - name: ideaId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartupIdeaInput'
+      responses:
+        '200':
+          description: Startup idea updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartupIdea'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # File Uploads
+  /uploads:
+    post:
+      summary: Upload pitch materials
+      description: Upload pitch decks, business plans, mockups, or demo videos
+      tags:
+        - Uploads
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                ideaId:
+                  type: string
+                  format: uuid
+                fileType:
+                  type: string
+                  enum: [pitch-deck, business-plan, mockup, demo-video]
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadedMaterial'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '413':
+          description: File too large (max 10MB)
+
+  /uploads/{uploadId}:
+    delete:
+      summary: Delete uploaded file
+      description: Remove an uploaded file
+      tags:
+        - Uploads
+      parameters:
+        - name: uploadId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: File deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # AI Analysis
+  /analysis:
+    post:
+      summary: Analyze startup idea
+      description: Trigger AI analysis of startup idea and uploaded materials
+      tags:
+        - Analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ideaId:
+                  type: string
+                  format: uuid
+              required:
+                - ideaId
+      responses:
+        '202':
+          description: Analysis started successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  analysisId:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [processing, completed, failed]
+                  estimatedCompletionTime:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /analysis/{analysisId}:
+    get:
+      summary: Get analysis result
+      description: Retrieve AI analysis results and match recommendations
+      tags:
+        - Analysis
+      parameters:
+        - name: analysisId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Analysis result retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResult'
+        '202':
+          description: Analysis still processing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [processing]
+                  progress:
+                    type: integer
+                    minimum: 0
+                    maximum: 100
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Matches
+  /matches:
+    get:
+      summary: Get match recommendations
+      description: Retrieve match recommendations for the founder
+      tags:
+        - Matches
+      parameters:
+        - name: type
+          in: query
+          description: Filter by match type
+          schema:
+            type: string
+            enum: [advisor, design-partner, early-customer]
+        - name: minScore
+          in: query
+          description: Minimum match score (0-100)
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100
+        - name: limit
+          in: query
+          description: Maximum number of results
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+        - name: offset
+          in: query
+          description: Pagination offset
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Match recommendations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  matches:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MatchRecommendation'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /matches/{matchId}:
+    get:
+      summary: Get match details
+      description: Retrieve detailed information about a specific match
+      tags:
+        - Matches
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Match details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchRecommendation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Connections
+  /connections:
+    post:
+      summary: Request connection
+      description: Send a connection request to a match
+      tags:
+        - Connections
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectionRequestInput'
+      responses:
+        '201':
+          description: Connection request sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+    get:
+      summary: Get connection requests
+      description: Retrieve all connection requests for the founder
+      tags:
+        - Connections
+      parameters:
+        - name: status
+          in: query
+          description: Filter by request status
+          schema:
+            type: string
+            enum: [pending, accepted, declined]
+        - name: type
+          in: query
+          description: Filter by match type
+          schema:
+            type: string
+            enum: [advisor, design-partner, early-customer]
+      responses:
+        '200':
+          description: Connection requests retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConnectionRequest'
+
+  /connections/{connectionId}:
+    get:
+      summary: Get connection request details
+      description: Retrieve details of a specific connection request
+      tags:
+        - Connections
+      parameters:
+        - name: connectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Connection request details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update connection request
+      description: Update the status or message of a connection request
+      tags:
+        - Connections
+      parameters:
+        - name: connectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [pending, accepted, declined]
+                customMessage:
+                  type: string
+      responses:
+        '200':
+          description: Connection request updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    ClerkAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Clerk.dev JWT token
+
+  schemas:
+    FounderProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [founder, co-founder, solo-entrepreneur]
+        background:
+          type: string
+          enum: [technical, business, design, domain-expert]
+        experienceLevel:
+          type: string
+          enum: [first-time, serial, corporate]
+        location:
+          type: string
+        focusAreas:
+          type: array
+          items:
+            type: string
+        linkedinUrl:
+          type: string
+          format: uri
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        - role
+        - background
+        - experienceLevel
+        - location
+        - focusAreas
+        - createdAt
+
+    FounderProfileInput:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+          enum: [founder, co-founder, solo-entrepreneur]
+        background:
+          type: string
+          enum: [technical, business, design, domain-expert]
+        experienceLevel:
+          type: string
+          enum: [first-time, serial, corporate]
+        location:
+          type: string
+        focusAreas:
+          type: array
+          items:
+            type: string
+        linkedinUrl:
+          type: string
+          format: uri
+          nullable: true
+      required:
+        - name
+        - role
+        - background
+        - experienceLevel
+        - location
+        - focusAreas
+
+    StartupIdea:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        founderId:
+          type: string
+          format: uuid
+        coreProblems:
+          type: string
+        targetCustomer:
+          type: string
+        proposedSolution:
+          type: string
+        industry:
+          type: string
+        marketOpportunity:
+          type: string
+        uniqueInsight:
+          type: string
+        technologyApproach:
+          type: string
+        technicalComplexity:
+          type: string
+          enum: [low, medium, high]
+        businessModel:
+          type: string
+        revenueModel:
+          type: string
+        completenessScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - founderId
+        - coreProblems
+        - targetCustomer
+        - proposedSolution
+        - completenessScore
+        - createdAt
+        - updatedAt
+
+    StartupIdeaInput:
+      type: object
+      properties:
+        coreProblems:
+          type: string
+        targetCustomer:
+          type: string
+        proposedSolution:
+          type: string
+        industry:
+          type: string
+        marketOpportunity:
+          type: string
+        uniqueInsight:
+          type: string
+        technologyApproach:
+          type: string
+        technicalComplexity:
+          type: string
+          enum: [low, medium, high]
+        businessModel:
+          type: string
+        revenueModel:
+          type: string
+      required:
+        - coreProblems
+        - targetCustomer
+        - proposedSolution
+
+    UploadedMaterial:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ideaId:
+          type: string
+          format: uuid
+        fileName:
+          type: string
+        fileType:
+          type: string
+          enum: [pitch-deck, business-plan, mockup, demo-video]
+        fileUrl:
+          type: string
+          format: uri
+        fileSize:
+          type: integer
+        uploadedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - ideaId
+        - fileName
+        - fileType
+        - fileUrl
+        - fileSize
+        - uploadedAt
+
+    AnalysisResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ideaId:
+          type: string
+          format: uuid
+        extractedInsights:
+          type: object
+          properties:
+            problemClarity:
+              type: integer
+              minimum: 0
+              maximum: 100
+            targetSegments:
+              type: array
+              items:
+                type: string
+            competitiveLandscape:
+              type: array
+              items:
+                type: string
+            technologyRequirements:
+              type: array
+              items:
+                type: string
+            teamNeeds:
+              type: array
+              items:
+                type: string
+            marketSizeIndicators:
+              type: array
+              items:
+                type: string
+            fundingStage:
+              type: string
+        advisorMatches:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchRecommendation'
+        designPartnerMatches:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchRecommendation'
+        customerMatches:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchRecommendation'
+        processedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - ideaId
+        - extractedInsights
+        - advisorMatches
+        - designPartnerMatches
+        - customerMatches
+        - processedAt
+
+    MatchRecommendation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [advisor, design-partner, early-customer]
+        name:
+          type: string
+        title:
+          type: string
+        company:
+          type: string
+        location:
+          type: string
+        matchScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        reasoning:
+          type: array
+          items:
+            type: string
+        valueAdd:
+          type: string
+        nextStep:
+          type: string
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        linkedinUrl:
+          type: string
+          format: uri
+          nullable: true
+        expertise:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - type
+        - name
+        - title
+        - company
+        - location
+        - matchScore
+        - reasoning
+        - valueAdd
+        - nextStep
+
+    ConnectionRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        founderId:
+          type: string
+          format: uuid
+        matchId:
+          type: string
+          format: uuid
+        matchType:
+          type: string
+          enum: [advisor, design-partner, early-customer]
+        customMessage:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [pending, accepted, declined]
+        requestedAt:
+          type: string
+          format: date-time
+        respondedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - founderId
+        - matchId
+        - matchType
+        - status
+        - requestedAt
+
+    ConnectionRequestInput:
+      type: object
+      properties:
+        matchId:
+          type: string
+          format: uuid
+        customMessage:
+          type: string
+          nullable: true
+      required:
+        - matchId
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        hasMore:
+          type: boolean
+      required:
+        - total
+        - limit
+        - offset
+        - hasMore
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          nullable: true
+      required:
+        - code
+        - message
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+tags:
+  - name: Authentication
+    description: User authentication and profile management
+  - name: Founders
+    description: Founder profile operations
+  - name: Ideas
+    description: Startup idea management
+  - name: Uploads
+    description: File upload operations
+  - name: Analysis
+    description: AI-powered analysis operations
+  - name: Matches
+    description: Match recommendation operations
+  - name: Connections
+    description: Connection request management

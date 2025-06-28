@@ -1,0 +1,1200 @@
+openapi: 3.0.3
+info:
+  title: Cerana Labs Investor Platform API
+  description: API for investor discovery, pipeline management, and founder matching
+  version: 1.0.0
+  contact:
+    name: Cerana Labs
+    url: https://ceranalabs.com
+    email: api@ceranalabs.com
+
+servers:
+  - url: https://api.ceranalabs.com/v1
+    description: Production server
+  - url: https://staging-api.ceranalabs.com/v1
+    description: Staging server
+
+security:
+  - ClerkAuth: []
+
+paths:
+  # Investor Authentication & Profile Management
+  /investors:
+    post:
+      summary: Create or update investor profile
+      description: Create a new investor profile or update existing profile
+      tags:
+        - Investors
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvestorProfileInput'
+      responses:
+        '201':
+          description: Investor profile created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestorProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /investors/{investorId}:
+    get:
+      summary: Get investor profile by ID
+      description: Retrieve a specific investor's profile
+      tags:
+        - Investors
+      parameters:
+        - name: investorId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Investor profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestorProfile'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update investor profile
+      description: Update an existing investor profile
+      tags:
+        - Investors
+      parameters:
+        - name: investorId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvestorProfileInput'
+      responses:
+        '200':
+          description: Investor profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestorProfile'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Founder Discovery
+  /discovery/founders:
+    get:
+      summary: Discover founders matching investment thesis
+      description: Get curated founder recommendations based on investor criteria
+      tags:
+        - Discovery
+      parameters:
+        - name: stage
+          in: query
+          description: Filter by funding stage
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [pre-seed, seed, series-a, series-b-plus]
+        - name: sector
+          in: query
+          description: Filter by sector
+          schema:
+            type: array
+            items:
+              type: string
+        - name: checkSize
+          in: query
+          description: Filter by check size range
+          schema:
+            type: string
+            enum: [25k-100k, 100k-500k, 500k-2m, 2m-plus]
+        - name: geography
+          in: query
+          description: Filter by geographic focus
+          schema:
+            type: string
+        - name: minMatchScore
+          in: query
+          description: Minimum match score (0-100)
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100
+        - name: limit
+          in: query
+          description: Maximum number of results
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+        - name: offset
+          in: query
+          description: Pagination offset
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Founder recommendations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  founders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FounderDiscoveryCard'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /discovery/founders/{founderId}:
+    get:
+      summary: Get detailed founder profile
+      description: Retrieve comprehensive founder information for due diligence
+      tags:
+        - Discovery
+      parameters:
+        - name: founderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detailed founder profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedFounderProfile'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Pipeline Management
+  /pipeline:
+    get:
+      summary: Get investor's deal pipeline
+      description: Retrieve all deals in the investor's pipeline
+      tags:
+        - Pipeline
+      parameters:
+        - name: stage
+          in: query
+          description: Filter by pipeline stage
+          schema:
+            type: string
+            enum: [sourced, first-meeting, due-diligence, partner-review, term-sheet, closed]
+        - name: status
+          in: query
+          description: Filter by deal status
+          schema:
+            type: string
+            enum: [active, passed, invested]
+      responses:
+        '200':
+          description: Pipeline deals retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PipelineDeal'
+
+    post:
+      summary: Add founder to pipeline
+      description: Add a discovered founder to the investment pipeline
+      tags:
+        - Pipeline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddToPipelineInput'
+      responses:
+        '201':
+          description: Founder added to pipeline successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineDeal'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /pipeline/{dealId}:
+    get:
+      summary: Get pipeline deal details
+      description: Retrieve detailed information about a specific deal
+      tags:
+        - Pipeline
+      parameters:
+        - name: dealId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Pipeline deal details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedPipelineDeal'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update pipeline deal
+      description: Update deal stage, status, or add notes
+      tags:
+        - Pipeline
+      parameters:
+        - name: dealId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePipelineDealInput'
+      responses:
+        '200':
+          description: Pipeline deal updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineDeal'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Meeting Management
+  /meetings:
+    post:
+      summary: Request meeting with founder
+      description: Send a meeting request to a founder
+      tags:
+        - Meetings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeetingRequestInput'
+      responses:
+        '201':
+          description: Meeting request sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+    get:
+      summary: Get scheduled meetings
+      description: Retrieve all scheduled meetings for the investor
+      tags:
+        - Meetings
+      parameters:
+        - name: status
+          in: query
+          description: Filter by meeting status
+          schema:
+            type: string
+            enum: [scheduled, completed, cancelled]
+        - name: startDate
+          in: query
+          description: Filter meetings from this date
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: Filter meetings until this date
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Meetings retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MeetingRequest'
+
+  # Analytics & Insights
+  /analytics/pipeline:
+    get:
+      summary: Get pipeline analytics
+      description: Retrieve pipeline performance metrics and insights
+      tags:
+        - Analytics
+      parameters:
+        - name: timeframe
+          in: query
+          description: Analytics timeframe
+          schema:
+            type: string
+            enum: [30d, 90d, 1y, all-time]
+            default: 90d
+      responses:
+        '200':
+          description: Pipeline analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineAnalytics'
+
+  /analytics/market:
+    get:
+      summary: Get market intelligence
+      description: Retrieve sector trends and competitive landscape data
+      tags:
+        - Analytics
+      parameters:
+        - name: sector
+          in: query
+          description: Filter by specific sector
+          schema:
+            type: string
+        - name: stage
+          in: query
+          description: Filter by funding stage
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Market intelligence retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarketIntelligence'
+
+components:
+  securitySchemes:
+    ClerkAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Clerk.dev JWT token
+
+  schemas:
+    InvestorProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        firmName:
+          type: string
+        title:
+          type: string
+        investmentThesis:
+          $ref: '#/components/schemas/InvestmentThesis'
+        linkedinUrl:
+          type: string
+          format: uri
+          nullable: true
+        accredited:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        - investmentThesis
+        - createdAt
+
+    InvestorProfileInput:
+      type: object
+      properties:
+        name:
+          type: string
+        firmName:
+          type: string
+        title:
+          type: string
+        investmentThesis:
+          $ref: '#/components/schemas/InvestmentThesisInput'
+        linkedinUrl:
+          type: string
+          format: uri
+          nullable: true
+        accredited:
+          type: boolean
+      required:
+        - name
+        - investmentThesis
+
+    InvestmentThesis:
+      type: object
+      properties:
+        stageFocus:
+          type: array
+          items:
+            type: string
+            enum: [pre-seed, seed, series-a, series-b-plus]
+        sectorPreferences:
+          type: array
+          items:
+            type: string
+        geographicFocus:
+          type: string
+          enum: [local, regional, national, global]
+        checkSizeRange:
+          type: string
+          enum: [25k-100k, 100k-500k, 500k-2m, 2m-plus]
+        investmentStyle:
+          type: string
+          enum: [lead, follow, strategic, financial]
+        dealFlowPreference:
+          type: string
+          enum: [high-volume, curated]
+        dueDiligenceStyle:
+          type: string
+          enum: [hands-on, delegated, collaborative]
+        valueAddAreas:
+          type: array
+          items:
+            type: string
+        investmentsPerYear:
+          type: integer
+          minimum: 1
+          maximum: 100
+      required:
+        - stageFocus
+        - sectorPreferences
+        - geographicFocus
+        - checkSizeRange
+        - investmentStyle
+
+    InvestmentThesisInput:
+      type: object
+      properties:
+        stageFocus:
+          type: array
+          items:
+            type: string
+            enum: [pre-seed, seed, series-a, series-b-plus]
+        sectorPreferences:
+          type: array
+          items:
+            type: string
+        geographicFocus:
+          type: string
+          enum: [local, regional, national, global]
+        checkSizeRange:
+          type: string
+          enum: [25k-100k, 100k-500k, 500k-2m, 2m-plus]
+        investmentStyle:
+          type: string
+          enum: [lead, follow, strategic, financial]
+        dealFlowPreference:
+          type: string
+          enum: [high-volume, curated]
+        dueDiligenceStyle:
+          type: string
+          enum: [hands-on, delegated, collaborative]
+        valueAddAreas:
+          type: array
+          items:
+            type: string
+        investmentsPerYear:
+          type: integer
+          minimum: 1
+          maximum: 100
+      required:
+        - stageFocus
+        - sectorPreferences
+        - geographicFocus
+        - checkSizeRange
+        - investmentStyle
+
+    FounderDiscoveryCard:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        title:
+          type: string
+        companyName:
+          type: string
+        matchScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        problemStatement:
+          type: string
+        fundingStage:
+          type: string
+        raisingAmount:
+          type: string
+        location:
+          type: string
+        traction:
+          $ref: '#/components/schemas/TractionHighlights'
+        whyThisFits:
+          type: array
+          items:
+            type: string
+        riskFlags:
+          type: array
+          items:
+            type: string
+        opportunities:
+          type: array
+          items:
+            type: string
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+        lastUpdated:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - companyName
+        - matchScore
+        - problemStatement
+        - fundingStage
+        - traction
+        - whyThisFits
+
+    DetailedFounderProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        title:
+          type: string
+        companyName:
+          type: string
+        background:
+          type: string
+        experienceLevel:
+          type: string
+        location:
+          type: string
+        linkedinUrl:
+          type: string
+          format: uri
+          nullable: true
+        startupIdea:
+          $ref: '#/components/schemas/StartupIdea'
+        traction:
+          $ref: '#/components/schemas/DetailedTraction'
+        team:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamMember'
+        fundraising:
+          $ref: '#/components/schemas/FundraisingDetails'
+        references:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reference'
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/FounderDocument'
+      required:
+        - id
+        - name
+        - companyName
+        - startupIdea
+        - traction
+        - fundraising
+
+    StartupIdea:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        founderId:
+          type: string
+          format: uuid
+        coreProblems:
+          type: string
+        targetCustomer:
+          type: string
+        proposedSolution:
+          type: string
+        industry:
+          type: string
+        marketOpportunity:
+          type: string
+        uniqueInsight:
+          type: string
+        technologyApproach:
+          type: string
+        technicalComplexity:
+          type: string
+          enum: [low, medium, high]
+        businessModel:
+          type: string
+        revenueModel:
+          type: string
+        completenessScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - founderId
+        - coreProblems
+        - targetCustomer
+        - proposedSolution
+        - completenessScore
+        - createdAt
+        - updatedAt
+
+    TractionHighlights:
+      type: object
+      properties:
+        revenue:
+          type: string
+        growth:
+          type: string
+        customers:
+          type: string
+        retention:
+          type: string
+        partnerships:
+          type: string
+
+    DetailedTraction:
+      type: object
+      properties:
+        revenue:
+          type: object
+          properties:
+            current:
+              type: number
+            growth:
+              type: number
+            recurring:
+              type: number
+        customers:
+          type: object
+          properties:
+            total:
+              type: integer
+            paying:
+              type: integer
+            retention:
+              type: number
+        metrics:
+          type: object
+          properties:
+            cac:
+              type: number
+            ltv:
+              type: number
+            churn:
+              type: number
+            nps:
+              type: number
+
+    TeamMember:
+      type: object
+      properties:
+        name:
+          type: string
+        title:
+          type: string
+        background:
+          type: string
+        linkedinUrl:
+          type: string
+          format: uri
+          nullable: true
+      required:
+        - name
+        - title
+        - background
+
+    FundraisingDetails:
+      type: object
+      properties:
+        stage:
+          type: string
+        targetAmount:
+          type: number
+        currentCommitments:
+          type: number
+        valuation:
+          type: number
+        useOfFunds:
+          type: string
+        timeline:
+          type: string
+        leadInvestor:
+          type: string
+          nullable: true
+      required:
+        - stage
+        - targetAmount
+        - useOfFunds
+
+    Reference:
+      type: object
+      properties:
+        name:
+          type: string
+        title:
+          type: string
+        company:
+          type: string
+        relationship:
+          type: string
+        contactInfo:
+          type: string
+      required:
+        - name
+        - title
+        - relationship
+
+    FounderDocument:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [pitch-deck, financial-model, product-demo, references]
+        url:
+          type: string
+          format: uri
+        uploadedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - type
+        - url
+
+    PipelineDeal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        founderId:
+          type: string
+          format: uuid
+        founderName:
+          type: string
+        companyName:
+          type: string
+        stage:
+          type: string
+          enum: [sourced, first-meeting, due-diligence, partner-review, term-sheet, closed]
+        status:
+          type: string
+          enum: [active, passed, invested]
+        daysInStage:
+          type: integer
+        nextAction:
+          type: string
+        nextActionDue:
+          type: string
+          format: date-time
+          nullable: true
+        matchScore:
+          type: integer
+        keyMetrics:
+          $ref: '#/components/schemas/TractionHighlights'
+        riskFlags:
+          type: array
+          items:
+            type: string
+        opportunities:
+          type: array
+          items:
+            type: string
+        notes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DealNote'
+        addedAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - founderId
+        - founderName
+        - companyName
+        - stage
+        - status
+        - matchScore
+        - addedAt
+
+    DetailedPipelineDeal:
+      allOf:
+        - $ref: '#/components/schemas/PipelineDeal'
+        - type: object
+          properties:
+            founderProfile:
+              $ref: '#/components/schemas/DetailedFounderProfile'
+            meetings:
+              type: array
+              items:
+                $ref: '#/components/schemas/MeetingRequest'
+            documents:
+              type: array
+              items:
+                $ref: '#/components/schemas/FounderDocument'
+
+    AddToPipelineInput:
+      type: object
+      properties:
+        founderId:
+          type: string
+          format: uuid
+        initialStage:
+          type: string
+          enum: [sourced, first-meeting]
+          default: sourced
+        notes:
+          type: string
+          nullable: true
+      required:
+        - founderId
+
+    UpdatePipelineDealInput:
+      type: object
+      properties:
+        stage:
+          type: string
+          enum: [sourced, first-meeting, due-diligence, partner-review, term-sheet, closed]
+        status:
+          type: string
+          enum: [active, passed, invested]
+        nextAction:
+          type: string
+        nextActionDue:
+          type: string
+          format: date-time
+        notes:
+          type: string
+
+    DealNote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        author:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - content
+        - author
+        - createdAt
+
+    MeetingRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        founderId:
+          type: string
+          format: uuid
+        founderName:
+          type: string
+        companyName:
+          type: string
+        meetingType:
+          type: string
+          enum: [intro-call, deep-dive, reference-call, final-decision]
+        scheduledAt:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+          description: Duration in minutes
+        status:
+          type: string
+          enum: [requested, scheduled, completed, cancelled]
+        agenda:
+          type: string
+        notes:
+          type: string
+          nullable: true
+        meetingUrl:
+          type: string
+          format: uri
+          nullable: true
+        requestedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - founderId
+        - founderName
+        - companyName
+        - meetingType
+        - status
+        - requestedAt
+
+    MeetingRequestInput:
+      type: object
+      properties:
+        founderId:
+          type: string
+          format: uuid
+        meetingType:
+          type: string
+          enum: [intro-call, deep-dive, reference-call, final-decision]
+        preferredTimes:
+          type: array
+          items:
+            type: string
+            format: date-time
+        duration:
+          type: integer
+          default: 30
+        agenda:
+          type: string
+        customMessage:
+          type: string
+          nullable: true
+      required:
+        - founderId
+        - meetingType
+        - preferredTimes
+
+    PipelineAnalytics:
+      type: object
+      properties:
+        overview:
+          type: object
+          properties:
+            totalDeals:
+              type: integer
+            activeDeals:
+              type: integer
+            averageDaysToClose:
+              type: number
+            conversionRate:
+              type: number
+        stageBreakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              stage:
+                type: string
+              count:
+                type: integer
+              averageDays:
+                type: number
+        sectorPerformance:
+          type: array
+          items:
+            type: object
+            properties:
+              sector:
+                type: string
+              dealCount:
+                type: integer
+              successRate:
+                type: number
+        monthlyTrends:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+              dealsAdded:
+                type: integer
+              dealsClosed:
+                type: integer
+              averageMatchScore:
+                type: number
+
+    MarketIntelligence:
+      type: object
+      properties:
+        sectorTrends:
+          type: array
+          items:
+            type: object
+            properties:
+              sector:
+                type: string
+              momentum:
+                type: string
+                enum: [hot, warm, cooling, cold]
+              averageValuation:
+                type: number
+              dealVolume:
+                type: integer
+              topCompanies:
+                type: array
+                items:
+                  type: string
+        competitiveLandscape:
+          type: array
+          items:
+            type: object
+            properties:
+              company:
+                type: string
+              stage:
+                type: string
+              lastFunding:
+                type: number
+              investors:
+                type: array
+                items:
+                  type: string
+        fundingTrends:
+          type: object
+          properties:
+            averageCheckSize:
+              type: number
+            medianValuation:
+              type: number
+            timeToClose:
+              type: number
+            hotSectors:
+              type: array
+              items:
+                type: string
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        hasMore:
+          type: boolean
+      required:
+        - total
+        - limit
+        - offset
+        - hasMore
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          nullable: true
+      required:
+        - code
+        - message
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+tags:
+  - name: Investors
+    description: Investor profile operations
+  - name: Discovery
+    description: Founder discovery and matching
+  - name: Pipeline
+    description: Deal pipeline management
+  - name: Meetings
+    description: Meeting scheduling and management
+  - name: Analytics
+    description: Performance analytics and market intelligence
