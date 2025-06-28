@@ -42,3 +42,8 @@ class UpdatePipelineDealInput(BaseModel):
     nextAction: Optional[str] = None
     nextActionDue: Optional[str] = None
     notes: Optional[str] = None
+
+PipelineDealSchema = PipelineDeal
+DetailedPipelineDealSchema = DetailedPipelineDeal
+AddToPipelineInputSchema = AddToPipelineInput
+UpdatePipelineDealInputSchema = UpdatePipelineDealInput

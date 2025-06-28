@@ -2,7 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime
-from app import db
+from db import db
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -24,7 +24,7 @@ class FounderProfile(db.Model):
     experience_level = db.Column(db.String(32), nullable=False)
     location = db.Column(db.String(255), nullable=False)
     focus_areas = db.Column(db.ARRAY(db.String(128)), nullable=False)
-    linkedin_url = db.Column(db.String(255))
+    linkedin_url = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -45,7 +45,7 @@ class InvestorProfile(db.Model):
     due_diligence_style = db.Column(db.String(255))
     value_add_areas = db.Column(db.ARRAY(db.String(128)))
     investments_per_year = db.Column(db.Integer)
-    linkedin_url = db.Column(db.String(255))
+    linkedin_url = db.Column(db.String(255), nullable=True)
     accredited = db.Column(db.Boolean)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

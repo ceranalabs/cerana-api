@@ -9,10 +9,9 @@ from routes.matches import bp as matches_bp
 from routes.connections import bp as connections_bp
 from routes.investor import bp as investor_bp
 from routes.discovery import bp as discovery_bp
-from flask_sqlalchemy import SQLAlchemy
+from routes.pipeline import bp as pipeline_bp
+from db import db
 import config
-
-db = SQLAlchemy()
 
 def create_app():
     app = Flask(__name__)
@@ -28,6 +27,7 @@ def create_app():
     app.register_blueprint(connections_bp)
     app.register_blueprint(investor_bp)
     app.register_blueprint(discovery_bp)
+    app.register_blueprint(pipeline_bp)
     return app
 
 

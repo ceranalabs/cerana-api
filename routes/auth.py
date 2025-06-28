@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from schemas.auth import SignupRequest, SignupResponse, VerifyRequest, VerifyResponse
 from services import auth as auth_service
 from utils.auth import require_auth
+from models import FounderProfile, InvestorProfile
 
 bp = Blueprint('auth', __name__)
 
@@ -26,16 +27,47 @@ def verify():
 @bp.route('/auth/me', methods=['GET'])
 @require_auth
 def me():
-    from services import founder_profile as founder_service
-    from routes.investor import investors
-    from schemas.founder_profile import FounderProfile
-    from schemas.investor import InvestorProfile
-    founder = founder_service.get_founder_profile(request.user_id)
+    founder = FounderProfile.query.get(request.user_id)
     if founder:
-        return jsonify(FounderProfile(**founder).model_dump(mode="json")), 200
-    investor = investors.get(request.user_id)
+        from schemas.founder_profile import FounderProfile as FounderProfileSchema
+        return jsonify(FounderProfileSchema(**{
+            'id': founder.id,
+            'name': founder.name,
+            'email': founder.email,
+            'role': founder.role,
+            'background': founder.background,
+            'experienceLevel': founder.experience_level,
+            'location': founder.location,
+            'focusAreas': founder.focus_areas,
+            'linkedinUrl': founder.linkedin_url,
+            'createdAt': founder.created_at.isoformat() if founder.created_at else None,
+            'updatedAt': founder.updated_at.isoformat() if founder.updated_at else None
+        }).model_dump(mode="json")), 200
+    investor = InvestorProfile.query.get(request.user_id)
     if investor:
-        return jsonify(InvestorProfile(**investor).model_dump(mode="json")), 200
+        from schemas.investor import InvestorProfile as InvestorProfileSchema
+        return jsonify(InvestorProfileSchema(**{
+            'id': investor.id,
+            'name': investor.name,
+            'email': investor.email,
+            'firmName': investor.firm_name,
+            'title': investor.title,
+            'investmentThesis': {
+                'stageFocus': investor.stage_focus,
+                'sectorPreferences': investor.sector_preferences,
+                'geographicFocus': investor.geographic_focus,
+                'checkSizeRange': investor.check_size_range,
+                'investmentStyle': investor.investment_style,
+                'dealFlowPreference': investor.deal_flow_preference,
+                'dueDiligenceStyle': investor.due_diligence_style,
+                'valueAddAreas': investor.value_add_areas,
+                'investmentsPerYear': investor.investments_per_year
+            },
+            'linkedinUrl': investor.linkedin_url,
+            'accredited': investor.accredited,
+            'createdAt': investor.created_at.isoformat() if investor.created_at else None,
+            'updatedAt': investor.updated_at.isoformat() if investor.updated_at else None
+        }).model_dump(mode="json")), 200
     return jsonify({'error': 'Profile not found'}), 404
 
 @bp.route('/auth/logout', methods=['POST'])

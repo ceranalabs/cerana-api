@@ -13,15 +13,15 @@ pipeline = {}
 def get_pipeline_route():
     filters = request.args.to_dict()
     deals = get_pipeline(filters, pipeline)
-    return jsonify([PipelineDealSchema().dump(deal) for deal in deals]), 200
+    return jsonify([PipelineDealSchema.model_validate(deal).model_dump(mode="json") for deal in deals]), 200
 
 @bp.route('/pipeline', methods=['POST'])
 @require_auth
 def add_to_pipeline_route():
     data = request.get_json()
-    validated = AddToPipelineInputSchema().load(data)
+    validated = AddToPipelineInputSchema.model_validate(data)
     deal = add_to_pipeline(validated, pipeline)
-    return jsonify(PipelineDealSchema().dump(deal)), 201
+    return jsonify(PipelineDealSchema.model_validate(deal).model_dump(mode="json")), 201
 
 @bp.route('/pipeline/<deal_id>', methods=['GET'])
 @require_auth

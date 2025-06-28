@@ -14,11 +14,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install
-COPY cerana_api/requirements.txt ./requirements.txt
+COPY requirements.txt ./requirements.txt
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Copy app code
-COPY cerana_api/ .
+COPY . .
 
 # Expose port
 EXPOSE 5000

@@ -10,10 +10,10 @@ def add_to_pipeline(data, pipeline):
     now = datetime.utcnow().isoformat()
     deal = {
         'id': deal_id,
-        'founderId': data['founderId'],
-        'founderName': data.get('founderName', ''),
-        'companyName': data.get('companyName', ''),
-        'stage': data.get('initialStage', 'sourced'),
+        'founderId': data.founderId,
+        'founderName': '',
+        'companyName': '',
+        'stage': data.initialStage or 'sourced',
         'status': 'active',
         'daysInStage': 0,
         'nextAction': '',
@@ -22,7 +22,14 @@ def add_to_pipeline(data, pipeline):
         'keyMetrics': {},
         'riskFlags': [],
         'opportunities': [],
-        'notes': [],
+        'notes': [
+            {
+                'id': str(uuid.uuid4()),
+                'content': data.notes,
+                'author': 'system',
+                'createdAt': now
+            }
+        ] if data.notes else [],
         'addedAt': now,
         'updatedAt': now
     }
