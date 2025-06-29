@@ -5,7 +5,7 @@ from flask import request, jsonify
 
 CLERK_JWT_ISSUER = 'https://exact-horse-66.clerk.accounts.dev'
 CLERK_JWT_AUDIENCE = None  # TODO: Set to your Clerk app's audience if needed
-CLERK_PUBLIC_KEY = os.environ.get('CLERK_PUBLIC_KEY', 'pk_test_ZXhhY3QtaG9yc2UtNjYuY2xlcmsuYWNjb3VudHMuZGV2JA')
+CLERK_PUBLIC_KEY = os.environ.get('CLERK_PUBLIC_KEY', '54wIbSo8K01w7s5YZ6zKxoSTE2D9AfnAKw39gEfzInRz-IaFWdAPAb71-1dyYU-SIw_3h25yyz5oS6RXPrp99TbjYh0I8ivBZqDcdCVUkKIy-Kne-gqclcBzPghoPvBvvfqMWrROWV8wcURXULN6tC_Dg7bqpQ_0hrN8SAob7vCMLsxnA8W18FHu1r06OdOh39T-TnIufFDqyg1lP9jpnx6-1lsTgGnE9PerpmsDNjFKpxU5SUqD0lOrKV8nAnl31fCuOeKkt45jdFW8hwpldL35cPHp_u3TkfcfiWa-YLzSAKz7RlFkdZB0P0d7dp7Q5ZLy3H3-EuKVlp-cqIgo2w')
 
 # Now verify signature and claims
 
