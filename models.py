@@ -25,6 +25,9 @@ class FounderProfile(db.Model):
     location = db.Column(db.String(255), nullable=False)
     focus_areas = db.Column(db.ARRAY(db.String(128)), nullable=False)
     linkedin_url = db.Column(db.String(255), nullable=True)
+    company_name = db.Column(db.String(255), nullable=True)
+    funding_stage = db.Column(db.String(64), nullable=True)
+    title = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

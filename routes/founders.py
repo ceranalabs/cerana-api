@@ -29,6 +29,9 @@ def create_or_update_founder():
             location=req.location,
             focus_areas=req.focusAreas,
             linkedin_url=req.linkedinUrl,
+            company_name=req.companyName,
+            funding_stage=req.fundingStage,
+            title=req.title,
         )
         db.session.add(founder)
     else:
@@ -40,6 +43,9 @@ def create_or_update_founder():
         founder.location = req.location
         founder.focus_areas = req.focusAreas
         founder.linkedin_url = req.linkedinUrl
+        founder.company_name = req.companyName
+        founder.funding_stage = req.fundingStage
+        founder.title = req.title
     db.session.commit()
     return jsonify(FounderProfileSchema(
         id=founder.id,
@@ -51,6 +57,9 @@ def create_or_update_founder():
         location=founder.location,
         focusAreas=founder.focus_areas,
         linkedinUrl=founder.linkedin_url,
+        companyName=founder.company_name,
+        fundingStage=founder.funding_stage,
+        title=founder.title,
         createdAt=founder.created_at.isoformat() if founder.created_at else None,
         updatedAt=founder.updated_at.isoformat() if founder.updated_at else None
     ).model_dump(mode="json")), 201
@@ -71,6 +80,9 @@ def get_founder(founder_id):
         location=founder.location,
         focusAreas=founder.focus_areas,
         linkedinUrl=founder.linkedin_url,
+        companyName=founder.company_name,
+        fundingStage=founder.funding_stage,
+        title=founder.title,
         createdAt=founder.created_at.isoformat() if founder.created_at else None,
         updatedAt=founder.updated_at.isoformat() if founder.updated_at else None
     ).model_dump(mode="json")), 200
@@ -99,6 +111,9 @@ def update_founder(founder_id):
             location=req.location,
             focus_areas=req.focusAreas,
             linkedin_url=req.linkedinUrl,
+            company_name=req.companyName,
+            funding_stage=req.fundingStage,
+            title=req.title,
         )
         db.session.add(founder)
     else:
@@ -110,6 +125,9 @@ def update_founder(founder_id):
         founder.location = req.location
         founder.focus_areas = req.focusAreas
         founder.linkedin_url = req.linkedinUrl
+        founder.company_name = req.companyName
+        founder.funding_stage = req.fundingStage
+        founder.title = req.title
     db.session.commit()
     return jsonify(FounderProfileSchema(
         id=founder.id,
@@ -121,6 +139,9 @@ def update_founder(founder_id):
         location=founder.location,
         focusAreas=founder.focus_areas,
         linkedinUrl=founder.linkedin_url,
+        companyName=founder.company_name,
+        fundingStage=founder.funding_stage,
+        title=founder.title,
         createdAt=founder.created_at.isoformat() if founder.created_at else None,
         updatedAt=founder.updated_at.isoformat() if founder.updated_at else None
     ).model_dump(mode="json")), 200

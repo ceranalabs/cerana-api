@@ -10,6 +10,9 @@ class FounderProfileInput(BaseModel):
     focusAreas: List[str]
     linkedinUrl: Optional[HttpUrl] = None
     email: EmailStr
+    companyName: Optional[str] = None
+    fundingStage: Optional[str] = None
+    title: Optional[str] = None
 
 class FounderProfile(BaseModel):
     id: str
@@ -21,5 +24,8 @@ class FounderProfile(BaseModel):
     location: str
     focusAreas: List[str]
     linkedinUrl: Optional[HttpUrl] = None
+    companyName: Optional[str] = None
+    fundingStage: Optional[str] = None
+    title: Optional[str] = None
     createdAt: str
     updatedAt: str
