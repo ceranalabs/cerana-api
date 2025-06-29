@@ -17,11 +17,11 @@ def list_founders():
         {
             'id': f.id,
             'name': f.name,
-            'title': None,  # Add title if you have it in your model
-            'companyName': None,  # Add companyName if you have it in your model
+            'title': f.title,
+            'companyName': f.company_name,
             'matchScore': None,   # Add matchScore logic if needed
             'problemStatement': None,
-            'fundingStage': None,
+            'fundingStage': f.funding_stage,
             'raisingAmount': None,
             'location': f.location,
             'traction': None,  # Add traction if you have it in your model
@@ -45,8 +45,8 @@ def get_founder(founder_id):
     result = {
         'id': founder.id,
         'name': founder.name,
-        'title': None,
-        'companyName': None,
+        'title': founder.title,
+        'companyName': founder.company_name,
         'background': founder.background,
         'experienceLevel': founder.experience_level,
         'location': founder.location,
