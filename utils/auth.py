@@ -7,7 +7,7 @@ from jwt import PyJWKClient
 
 CLERK_JWT_ISSUER = 'https://exact-horse-66.clerk.accounts.dev'
 CLERK_JWKS_URL = f"{CLERK_JWT_ISSUER}/.well-known/jwks.json"
-PERMITTED_ORIGINS = os.environ.get('PERMITTED_ORIGINS', 'http://localhost:3000').split(',')
+PERMITTED_ORIGINS = os.environ.get('PERMITTED_ORIGINS', 'http://localhost:3000,https://cerana.netlify.app').split(',')
 
 def require_auth(f):
     @wraps(f)
