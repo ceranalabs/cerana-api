@@ -40,6 +40,9 @@ def me():
             'location': founder.location,
             'focusAreas': founder.focus_areas,
             'linkedinUrl': founder.linkedin_url,
+            'companyName': founder.company_name,
+            'fundingStage': founder.funding_stage,
+            'title': founder.title,
             'createdAt': founder.created_at.isoformat() if founder.created_at else None,
             'updatedAt': founder.updated_at.isoformat() if founder.updated_at else None
         }).model_dump(mode="json")), 200
