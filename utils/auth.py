@@ -1,13 +1,13 @@
 import os
 import jwt
+import requests
 from functools import wraps
 from flask import request, jsonify
+from jwt import PyJWKClient
 
 CLERK_JWT_ISSUER = 'https://exact-horse-66.clerk.accounts.dev'
-CLERK_JWT_AUDIENCE = None  # TODO: Set to your Clerk app's audience if needed
-CLERK_PUBLIC_KEY = os.environ.get('CLERK_PUBLIC_KEY', '54wIbSo8K01w7s5YZ6zKxoSTE2D9AfnAKw39gEfzInRz-IaFWdAPAb71-1dyYU-SIw_3h25yyz5oS6RXPrp99TbjYh0I8ivBZqDcdCVUkKIy-Kne-gqclcBzPghoPvBvvfqMWrROWV8wcURXULN6tC_Dg7bqpQ_0hrN8SAob7vCMLsxnA8W18FHu1r06OdOh39T-TnIufFDqyg1lP9jpnx6-1lsTgGnE9PerpmsDNjFKpxU5SUqD0lOrKV8nAnl31fCuOeKkt45jdFW8hwpldL35cPHp_u3TkfcfiWa-YLzSAKz7RlFkdZB0P0d7dp7Q5ZLy3H3-EuKVlp-cqIgo2w')
-
-# Now verify signature and claims
+CLERK_JWKS_URL = f"{CLERK_JWT_ISSUER}/.well-known/jwks.json"
+PERMITTED_ORIGINS = os.environ.get('PERMITTED_ORIGINS', 'http://localhost:3000').split(',')
 
 def require_auth(f):
     @wraps(f)
@@ -17,13 +17,18 @@ def require_auth(f):
             return jsonify({'error': 'Missing or invalid Authorization header'}), 401
         token = auth_header.split(' ', 1)[1]
         try:
+            jwks_client = PyJWKClient(CLERK_JWKS_URL)
+            signing_key = jwks_client.get_signing_key_from_jwt(token)
             payload = jwt.decode(
                 token,
-                CLERK_PUBLIC_KEY,
-                algorithms=["RS256", "HS256"],
+                signing_key.key,
+                algorithms=["RS256"],
                 issuer=CLERK_JWT_ISSUER,
-                options={"require": ["exp", "sub"], "verify_aud": False}  # Set verify_aud True and audience if needed
+                options={"require": ["exp", "sub"], "verify_aud": False}
             )
+            # Optional: azp check for CSRF protection
+            if "azp" in payload and payload["azp"] not in PERMITTED_ORIGINS:
+                return jsonify({"error": "Invalid azp claim"}), 401
             request.user_id = payload.get('sub')
             request.user_role = payload.get('role', 'founder')
         except Exception as e:
