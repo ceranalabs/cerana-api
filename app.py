@@ -10,6 +10,7 @@ from routes.connections import bp as connections_bp
 from routes.investor import bp as investor_bp
 from routes.discovery import bp as discovery_bp
 from routes.pipeline import bp as pipeline_bp
+from routes.meeting import bp as meeting_bp
 from db import db
 import config
 
@@ -28,6 +29,7 @@ def create_app():
     app.register_blueprint(investor_bp)
     app.register_blueprint(discovery_bp)
     app.register_blueprint(pipeline_bp)
+    app.register_blueprint(meeting_bp)
     return app
 
 

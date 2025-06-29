@@ -50,11 +50,26 @@ class InvestorProfile(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+class Meeting(db.Model):
+    __tablename__ = 'meetings'
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    founder_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    founder_name = db.Column(db.String(255), nullable=True)
+    company_name = db.Column(db.String(255), nullable=True)
+    meeting_type = db.Column(db.String(64), nullable=False)
+    scheduled_at = db.Column(db.DateTime, nullable=True)
+    duration = db.Column(db.Integer, nullable=True, default=30)
+    status = db.Column(db.String(32), nullable=False, default='requested')
+    agenda = db.Column(db.Text, nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    meeting_url = db.Column(db.String(255), nullable=True)
+    requested_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user = db.relationship('User', backref='meetings', foreign_keys=[founder_id])
+
 # In-memory data stores
 investors = {}
 founders = {}
 pipeline = {}
-meetings = {}
 
 # Sample investor
 investor_id = str(uuid.uuid4())
@@ -130,21 +145,4 @@ pipeline[pipeline_id] = {
     'notes': [],
     'addedAt': datetime.utcnow().isoformat(),
     'updatedAt': datetime.utcnow().isoformat()
-}
-
-# Sample meeting
-meeting_id = str(uuid.uuid4())
-meetings[meeting_id] = {
-    'id': meeting_id,
-    'founderId': founder_id,
-    'founderName': 'Sarah Chen',
-    'companyName': 'TechFlow AI',
-    'meetingType': 'intro-call',
-    'scheduledAt': datetime.utcnow().isoformat(),
-    'duration': 30,
-    'status': 'scheduled',
-    'agenda': 'Intro and product overview',
-    'notes': '',
-    'meetingUrl': None,
-    'requestedAt': datetime.utcnow().isoformat()
 }
