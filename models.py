@@ -91,3 +91,87 @@ class PipelineDeal(db.Model):
     # Relationships
     investor = db.relationship('User', backref='pipeline_deals_as_investor', foreign_keys=[investor_id])
     founder = db.relationship('User', backref='pipeline_deals_as_founder', foreign_keys=[founder_id])
+
+# Hiring Platform Models
+class CandidateProfile(db.Model):
+    __tablename__ = 'candidate_profiles'
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    name = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    phone = db.Column(db.String(50), nullable=True)
+    location = db.Column(db.String(255), nullable=False)
+    work_auth_status = db.Column(db.String(32), nullable=False)  # citizen, permanent_resident, visa_holder, needs_sponsorship
+    availability = db.Column(db.String(32), nullable=False)  # actively_looking, open_to_opportunities, not_looking
+    employment_status = db.Column(db.String(32), nullable=False)  # employed, unemployed, freelancing, student
+    salary_expectations = db.Column(db.JSON, nullable=True)  # {min, max, currency}
+    skills = db.Column(db.ARRAY(db.String(128)), nullable=False)
+    experience_level = db.Column(db.String(32), nullable=False)  # entry, mid, senior, lead, principal, executive
+    bio = db.Column(db.Text, nullable=True)
+    linkedin_url = db.Column(db.String(255), nullable=True)
+    portfolio_url = db.Column(db.String(255), nullable=True)
+    certifications = db.Column(db.ARRAY(db.String(255)), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    work_experience = db.relationship('WorkExperience', backref='candidate', lazy='dynamic', cascade='all, delete-orphan')
+    education = db.relationship('Education', backref='candidate', lazy='dynamic', cascade='all, delete-orphan')
+
+class WorkExperience(db.Model):
+    __tablename__ = 'work_experience'
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    candidate_id = db.Column(db.String(36), db.ForeignKey('candidate_profiles.id'), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    company = db.Column(db.String(255), nullable=False)
+    role_description = db.Column(db.Text, nullable=False)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=True)
+    is_current = db.Column(db.Boolean, default=False)
+    skills = db.Column(db.ARRAY(db.String(128)), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Education(db.Model):
+    __tablename__ = 'education'
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    candidate_id = db.Column(db.String(36), db.ForeignKey('candidate_profiles.id'), nullable=False)
+    degree = db.Column(db.String(255), nullable=False)
+    institution = db.Column(db.String(255), nullable=False)
+    field_of_study = db.Column(db.String(255), nullable=False)
+    graduation_year = db.Column(db.Integer, nullable=True)
+    gpa = db.Column(db.Float, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class JobPosting(db.Model):
+    __tablename__ = 'job_postings'
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    founder_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    job_description = db.Column(db.Text, nullable=False)
+    required_skills = db.Column(db.ARRAY(db.String(128)), nullable=False)
+    preferred_skills = db.Column(db.ARRAY(db.String(128)), nullable=True)
+    experience_level = db.Column(db.String(32), nullable=False)  # entry, mid, senior, lead, principal, executive
+    location = db.Column(db.String(255), nullable=False)
+    is_remote = db.Column(db.Boolean, default=False)
+    salary_range = db.Column(db.JSON, nullable=False)  # {min, max, currency}
+    equity = db.Column(db.JSON, nullable=True)  # {min, max, unit}
+    employment_type = db.Column(db.String(32), nullable=False)  # full_time, part_time, contract, internship
+    department = db.Column(db.String(255), nullable=False)
+    team = db.Column(db.String(255), nullable=True)
+    status = db.Column(db.String(32), nullable=False, default='active')  # active, paused, closed
+    posted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    founder = db.relationship('User', backref='job_postings', foreign_keys=[founder_id])
+
+class SavedSearch(db.Model):
+    __tablename__ = 'saved_searches'
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    founder_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    search_criteria = db.Column(db.JSON, nullable=False)  # Complete search request as JSON
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_used = db.Column(db.DateTime, nullable=True)
+
+    # Relationships
+    founder = db.relationship('User', backref='saved_searches', foreign_keys=[founder_id])

@@ -35,3 +35,17 @@ def require_auth(f):
             return jsonify({'error': 'Invalid token', 'details': str(e)}), 401
         return f(*args, **kwargs)
     return decorated
+
+def get_current_user():
+    """Get the current authenticated user from the database"""
+    from models import User
+    from db import db
+
+    # Get user_id from request (set by require_auth decorator)
+    user_id = getattr(request, 'user_id', None)
+    if not user_id:
+        return None
+
+    # Query database for user
+    user = db.session.query(User).filter(User.id == user_id).first()
+    return user

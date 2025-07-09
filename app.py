@@ -11,6 +11,9 @@ from routes.investor import bp as investor_bp
 from routes.discovery import bp as discovery_bp
 from routes.pipeline import bp as pipeline_bp
 from routes.meeting import bp as meeting_bp
+from routes.candidates import candidates_bp
+from routes.jobs import jobs_bp
+from routes.searches import searches_bp
 from db import db
 import config
 
@@ -30,6 +33,10 @@ def create_app():
     app.register_blueprint(discovery_bp)
     app.register_blueprint(pipeline_bp)
     app.register_blueprint(meeting_bp)
+    # Hiring platform blueprints
+    app.register_blueprint(candidates_bp)
+    app.register_blueprint(jobs_bp)
+    app.register_blueprint(searches_bp)
     return app
 
 
