@@ -69,83 +69,25 @@ class Meeting(db.Model):
     requested_at = db.Column(db.DateTime, default=datetime.utcnow)
     user = db.relationship('User', backref='meetings', foreign_keys=[founder_id])
 
-# In-memory data stores
-investors = {}
-founders = {}
-pipeline = {}
+class PipelineDeal(db.Model):
+    __tablename__ = 'pipeline_deals'
+    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    investor_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    founder_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    founder_name = db.Column(db.String(255), nullable=True)
+    company_name = db.Column(db.String(255), nullable=True)
+    stage = db.Column(db.String(64), nullable=False)
+    status = db.Column(db.String(32), nullable=False, default='active')
+    next_action = db.Column(db.String(255), nullable=True)
+    next_action_due = db.Column(db.DateTime, nullable=True)
+    match_score = db.Column(db.Integer, nullable=True)
+    key_metrics = db.Column(db.JSON, nullable=True)
+    risk_flags = db.Column(db.ARRAY(db.String(255)), nullable=True)
+    opportunities = db.Column(db.ARRAY(db.String(255)), nullable=True)
+    notes = db.Column(db.ARRAY(db.Text), nullable=True)
+    added_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-# Sample investor
-investor_id = str(uuid.uuid4())
-investors[investor_id] = {
-    'id': investor_id,
-    'name': 'Jane Doe',
-    'email': 'jane@vcfirm.com',
-    'firmName': 'VC Firm',
-    'title': 'Partner',
-    'investmentThesis': {
-        'stageFocus': ['seed', 'series-a'],
-        'sectorPreferences': ['AI/ML', 'SaaS'],
-        'geographicFocus': 'national',
-        'checkSizeRange': '100k-500k',
-        'investmentStyle': 'lead',
-        'dealFlowPreference': 'curated',
-        'dueDiligenceStyle': 'hands-on',
-        'valueAddAreas': ['go-to-market', 'fundraising'],
-        'investmentsPerYear': 5
-    },
-    'linkedinUrl': 'https://linkedin.com/in/janedoe',
-    'accredited': True,
-    'createdAt': datetime.utcnow().isoformat(),
-    'updatedAt': datetime.utcnow().isoformat()
-}
-
-# Sample founder
-founder_id = str(uuid.uuid4())
-founders[founder_id] = {
-    'id': founder_id,
-    'name': 'Sarah Chen',
-    'title': 'CEO',
-    'companyName': 'TechFlow AI',
-    'matchScore': 94,
-    'problemStatement': 'AI-powered invoice processing',
-    'fundingStage': 'series-a',
-    'raisingAmount': '$2M',
-    'location': 'San Francisco',
-    'traction': {
-        'revenue': '$50K MRR',
-        'growth': '15% monthly',
-        'customers': '45 SMB clients',
-        'retention': '95%',
-        'partnerships': '3 major integrators'
-    },
-    'whyThisFits': [
-        'B2B SaaS in your sweet spot',
-        'Strong product-market fit signals',
-        'Technical founder with domain expertise'
-    ],
-    'riskFlags': ['Competitive pressure'],
-    'opportunities': ['Strong unit economics'],
-    'avatarUrl': None,
-    'lastUpdated': datetime.utcnow().isoformat()
-}
-
-# Sample pipeline deal
-pipeline_id = str(uuid.uuid4())
-pipeline[pipeline_id] = {
-    'id': pipeline_id,
-    'founderId': founder_id,
-    'founderName': 'Sarah Chen',
-    'companyName': 'TechFlow AI',
-    'stage': 'due-diligence',
-    'status': 'active',
-    'daysInStage': 12,
-    'nextAction': 'Reference calls',
-    'nextActionDue': datetime.utcnow().isoformat(),
-    'matchScore': 94,
-    'keyMetrics': founders[founder_id]['traction'],
-    'riskFlags': ['Competitive pressure'],
-    'opportunities': ['Strong unit economics'],
-    'notes': [],
-    'addedAt': datetime.utcnow().isoformat(),
-    'updatedAt': datetime.utcnow().isoformat()
-}
+    # Relationships
+    investor = db.relationship('User', backref='pipeline_deals_as_investor', foreign_keys=[investor_id])
+    founder = db.relationship('User', backref='pipeline_deals_as_founder', foreign_keys=[founder_id])

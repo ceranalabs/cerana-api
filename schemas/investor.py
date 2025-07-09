@@ -1,37 +1,61 @@
-from pydantic import BaseModel, EmailStr, HttpUrl
+from pydantic import BaseModel, EmailStr, HttpUrl, Field
 from typing import List, Optional
 
 class InvestmentThesisInput(BaseModel):
-    stageFocus: List[str]
-    sectorPreferences: List[str]
-    geographicFocus: str
-    checkSizeRange: str
-    investmentStyle: str
-    dealFlowPreference: Optional[str] = None
-    dueDiligenceStyle: Optional[str] = None
-    valueAddAreas: Optional[List[str]] = None
-    investmentsPerYear: Optional[int] = None
+    stage_focus: List[str] = Field(..., alias='stageFocus')
+    sector_preferences: List[str] = Field(..., alias='sectorPreferences')
+    geographic_focus: str = Field(..., alias='geographicFocus')
+    check_size_range: str = Field(..., alias='checkSizeRange')
+    investment_style: str = Field(..., alias='investmentStyle')
+    deal_flow_preference: Optional[str] = Field(None, alias='dealFlowPreference')
+    due_diligence_style: Optional[str] = Field(None, alias='dueDiligenceStyle')
+    value_add_areas: Optional[List[str]] = Field(None, alias='valueAddAreas')
+    investments_per_year: Optional[int] = Field(None, alias='investmentsPerYear')
+
+    class Config:
+        populate_by_name = True
 
 class InvestorProfileInput(BaseModel):
     name: str
     email: EmailStr
-    firmName: Optional[str] = None
+    firm_name: Optional[str] = Field(None, alias='firmName')
     title: Optional[str] = None
-    investmentThesis: InvestmentThesisInput
-    linkedinUrl: Optional[HttpUrl] = None
+    investment_thesis: InvestmentThesisInput = Field(..., alias='investmentThesis')
+    linkedin_url: Optional[HttpUrl] = Field(None, alias='linkedinUrl')
     accredited: Optional[bool] = None
 
-class InvestmentThesis(InvestmentThesisInput):
-    pass
+    class Config:
+        populate_by_name = True
 
-class InvestorProfile(BaseModel):
+class InvestmentThesisOutput(BaseModel):
+    stage_focus: List[str] = Field(..., alias='stageFocus')
+    sector_preferences: List[str] = Field(..., alias='sectorPreferences')
+    geographic_focus: str = Field(..., alias='geographicFocus')
+    check_size_range: str = Field(..., alias='checkSizeRange')
+    investment_style: str = Field(..., alias='investmentStyle')
+    deal_flow_preference: Optional[str] = Field(None, alias='dealFlowPreference')
+    due_diligence_style: Optional[str] = Field(None, alias='dueDiligenceStyle')
+    value_add_areas: Optional[List[str]] = Field(None, alias='valueAddAreas')
+    investments_per_year: Optional[int] = Field(None, alias='investmentsPerYear')
+
+    class Config:
+        populate_by_name = True
+
+class InvestorProfileOutput(BaseModel):
     id: str
     name: str
     email: EmailStr
-    firmName: Optional[str] = None
+    firm_name: Optional[str] = Field(None, alias='firmName')
     title: Optional[str] = None
-    investmentThesis: InvestmentThesis
-    linkedinUrl: Optional[HttpUrl] = None
+    investment_thesis: InvestmentThesisOutput = Field(..., alias='investmentThesis')
+    linkedin_url: Optional[HttpUrl] = Field(None, alias='linkedinUrl')
     accredited: Optional[bool] = None
-    createdAt: str
-    updatedAt: str
+    created_at: str = Field(..., alias='createdAt')
+    updated_at: str = Field(..., alias='updatedAt')
+
+    class Config:
+        populate_by_name = True
+
+# For backwards compatibility
+InvestmentThesis = InvestmentThesisOutput
+InvestorProfile = InvestorProfileOutput

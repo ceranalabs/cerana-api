@@ -1,49 +1,54 @@
-from pydantic import BaseModel
-from typing import List, Optional
-from schemas.founder import TractionHighlights, FounderDocument, DetailedFounderProfile
-
-class DealNote(BaseModel):
-    id: str
-    content: str
-    author: str
-    createdAt: str
-
-class PipelineDeal(BaseModel):
-    id: str
-    founderId: str
-    founderName: Optional[str] = None
-    companyName: Optional[str] = None
-    stage: str
-    status: str
-    daysInStage: Optional[int] = None
-    nextAction: Optional[str] = None
-    nextActionDue: Optional[str] = None
-    matchScore: Optional[int] = None
-    keyMetrics: Optional[TractionHighlights] = None
-    riskFlags: Optional[List[str]] = None
-    opportunities: Optional[List[str]] = None
-    notes: Optional[List[DealNote]] = None
-    addedAt: Optional[str] = None
-    updatedAt: Optional[str] = None
-
-class DetailedPipelineDeal(PipelineDeal):
-    founderProfile: Optional[DetailedFounderProfile] = None
-    meetings: Optional[List[dict]] = None
-    documents: Optional[List[FounderDocument]] = None
+from pydantic import BaseModel, Field
+from typing import List, Optional, Dict, Any
+from datetime import datetime
 
 class AddToPipelineInput(BaseModel):
-    founderId: str
-    initialStage: Optional[str] = None
-    notes: Optional[str] = None
+    founder_id: str = Field(..., alias='founderId')
+
+    class Config:
+        populate_by_name = True
 
 class UpdatePipelineDealInput(BaseModel):
     stage: Optional[str] = None
     status: Optional[str] = None
-    nextAction: Optional[str] = None
-    nextActionDue: Optional[str] = None
-    notes: Optional[str] = None
+    next_action: Optional[str] = Field(None, alias='nextAction')
+    next_action_due: Optional[datetime] = Field(None, alias='nextActionDue')
+    match_score: Optional[int] = Field(None, alias='matchScore')
+    key_metrics: Optional[Dict[str, Any]] = Field(None, alias='keyMetrics')
+    risk_flags: Optional[List[str]] = Field(None, alias='riskFlags')
+    opportunities: Optional[List[str]] = None
+    notes: Optional[List[str]] = None
 
-PipelineDealSchema = PipelineDeal
-DetailedPipelineDealSchema = DetailedPipelineDeal
+    class Config:
+        populate_by_name = True
+
+class PipelineDealOutput(BaseModel):
+    id: str
+    investor_id: str = Field(..., alias='investorId')
+    founder_id: str = Field(..., alias='founderId')
+    founder_name: Optional[str] = Field(None, alias='founderName')
+    company_name: Optional[str] = Field(None, alias='companyName')
+    stage: str
+    status: str
+    next_action: Optional[str] = Field(None, alias='nextAction')
+    next_action_due: Optional[str] = Field(None, alias='nextActionDue')
+    match_score: Optional[int] = Field(None, alias='matchScore')
+    key_metrics: Optional[Dict[str, Any]] = Field(None, alias='keyMetrics')
+    risk_flags: Optional[List[str]] = Field(None, alias='riskFlags')
+    opportunities: Optional[List[str]] = None
+    notes: Optional[List[str]] = None
+    added_at: str = Field(..., alias='addedAt')
+    updated_at: str = Field(..., alias='updatedAt')
+
+    class Config:
+        populate_by_name = True
+
+class DetailedPipelineDealOutput(PipelineDealOutput):
+    # Add additional fields that might be needed for detailed view
+    pass
+
+# For backwards compatibility
+PipelineDealSchema = PipelineDealOutput
+DetailedPipelineDealSchema = DetailedPipelineDealOutput
 AddToPipelineInputSchema = AddToPipelineInput
 UpdatePipelineDealInputSchema = UpdatePipelineDealInput

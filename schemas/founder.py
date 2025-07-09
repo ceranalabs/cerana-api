@@ -1,6 +1,46 @@
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, EmailStr, Field
 from typing import List, Optional
 
+# Basic CRUD schemas for founder profiles
+class FounderProfileInput(BaseModel):
+    name: str
+    role: str
+    background: str
+    experience_level: str = Field(..., alias='experienceLevel')
+    location: str
+    focus_areas: List[str] = Field(..., alias='focusAreas')
+    linkedin_url: Optional[HttpUrl] = Field(None, alias='linkedinUrl')
+    email: EmailStr
+    company_name: Optional[str] = Field(None, alias='companyName')
+    funding_stage: Optional[str] = Field(None, alias='fundingStage')
+    title: Optional[str] = None
+
+    class Config:
+        populate_by_name = True
+
+class FounderProfileOutput(BaseModel):
+    id: str
+    name: str
+    email: EmailStr
+    role: str
+    background: str
+    experience_level: str = Field(..., alias='experienceLevel')
+    location: str
+    focus_areas: List[str] = Field(..., alias='focusAreas')
+    linkedin_url: Optional[HttpUrl] = Field(None, alias='linkedinUrl')
+    company_name: Optional[str] = Field(None, alias='companyName')
+    funding_stage: Optional[str] = Field(None, alias='fundingStage')
+    title: Optional[str] = None
+    created_at: str = Field(..., alias='createdAt')
+    updated_at: str = Field(..., alias='updatedAt')
+
+    class Config:
+        populate_by_name = True
+
+# For backwards compatibility
+FounderProfile = FounderProfileOutput
+
+# Discovery and detailed view schemas
 class TractionHighlights(BaseModel):
     revenue: Optional[str] = None
     growth: Optional[str] = None

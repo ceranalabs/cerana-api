@@ -1,10 +1,41 @@
 from flask import Blueprint, request, jsonify
-from schemas.founder_profile import FounderProfileInput, FounderProfile as FounderProfileSchema
+from schemas.founder import FounderProfileInput, FounderProfile as FounderProfileSchema
+from schemas import founder_profile_to_dict
 from models import FounderProfile, User
 from db import db
 from utils.auth import require_auth
 
 bp = Blueprint('founders', __name__)
+
+@bp.route('/founders', methods=['GET'])
+@require_auth
+def list_founders():
+    """Get list of all founders with optional filtering"""
+    # Get query parameters for filtering
+    funding_stage = request.args.get('fundingStage')
+    location = request.args.get('location')
+    background = request.args.get('background')
+    limit = request.args.get('limit', type=int)
+
+    # Build query
+    query = FounderProfile.query
+
+    # Apply filters if provided
+    if funding_stage:
+        query = query.filter_by(funding_stage=funding_stage)
+    if location:
+        query = query.filter(FounderProfile.location.ilike(f'%{location}%'))
+    if background:
+        query = query.filter_by(background=background)
+
+    # Apply limit if provided
+    if limit:
+        query = query.limit(limit)
+
+    founders = query.all()
+    result = [founder_profile_to_dict(founder) for founder in founders]
+
+    return jsonify(result), 200
 
 @bp.route('/founders', methods=['POST'])
 @require_auth
@@ -25,12 +56,12 @@ def create_or_update_founder():
             email=req.email,
             role=req.role,
             background=req.background,
-            experience_level=req.experienceLevel,
+            experience_level=req.experience_level,
             location=req.location,
-            focus_areas=req.focusAreas,
-            linkedin_url=req.linkedinUrl,
-            company_name=req.companyName,
-            funding_stage=req.fundingStage,
+            focus_areas=req.focus_areas,
+            linkedin_url=req.linkedin_url,
+            company_name=req.company_name,
+            funding_stage=req.funding_stage,
             title=req.title,
         )
         db.session.add(founder)
@@ -39,30 +70,15 @@ def create_or_update_founder():
         founder.email = req.email
         founder.role = req.role
         founder.background = req.background
-        founder.experience_level = req.experienceLevel
+        founder.experience_level = req.experience_level
         founder.location = req.location
-        founder.focus_areas = req.focusAreas
-        founder.linkedin_url = req.linkedinUrl
-        founder.company_name = req.companyName
-        founder.funding_stage = req.fundingStage
+        founder.focus_areas = req.focus_areas
+        founder.linkedin_url = req.linkedin_url
+        founder.company_name = req.company_name
+        founder.funding_stage = req.funding_stage
         founder.title = req.title
     db.session.commit()
-    return jsonify(FounderProfileSchema(
-        id=founder.id,
-        name=founder.name,
-        email=founder.email,
-        role=founder.role,
-        background=founder.background,
-        experienceLevel=founder.experience_level,
-        location=founder.location,
-        focusAreas=founder.focus_areas,
-        linkedinUrl=founder.linkedin_url,
-        companyName=founder.company_name,
-        fundingStage=founder.funding_stage,
-        title=founder.title,
-        createdAt=founder.created_at.isoformat() if founder.created_at else None,
-        updatedAt=founder.updated_at.isoformat() if founder.updated_at else None
-    ).model_dump(mode="json")), 201
+    return jsonify(founder_profile_to_dict(founder)), 201
 
 @bp.route('/founders/<founder_id>', methods=['GET'])
 @require_auth
@@ -70,22 +86,7 @@ def get_founder(founder_id):
     founder = FounderProfile.query.get(founder_id)
     if not founder:
         return jsonify({'error': 'Not found'}), 404
-    return jsonify(FounderProfileSchema(
-        id=founder.id,
-        name=founder.name,
-        email=founder.email,
-        role=founder.role,
-        background=founder.background,
-        experienceLevel=founder.experience_level,
-        location=founder.location,
-        focusAreas=founder.focus_areas,
-        linkedinUrl=founder.linkedin_url,
-        companyName=founder.company_name,
-        fundingStage=founder.funding_stage,
-        title=founder.title,
-        createdAt=founder.created_at.isoformat() if founder.created_at else None,
-        updatedAt=founder.updated_at.isoformat() if founder.updated_at else None
-    ).model_dump(mode="json")), 200
+    return jsonify(founder_profile_to_dict(founder)), 200
 
 @bp.route('/founders/<founder_id>', methods=['PUT'])
 @require_auth
@@ -107,12 +108,12 @@ def update_founder(founder_id):
             email=req.email,
             role=req.role,
             background=req.background,
-            experience_level=req.experienceLevel,
+            experience_level=req.experience_level,
             location=req.location,
-            focus_areas=req.focusAreas,
-            linkedin_url=req.linkedinUrl,
-            company_name=req.companyName,
-            funding_stage=req.fundingStage,
+            focus_areas=req.focus_areas,
+            linkedin_url=req.linkedin_url,
+            company_name=req.company_name,
+            funding_stage=req.funding_stage,
             title=req.title,
         )
         db.session.add(founder)
@@ -121,27 +122,12 @@ def update_founder(founder_id):
         founder.email = req.email
         founder.role = req.role
         founder.background = req.background
-        founder.experience_level = req.experienceLevel
+        founder.experience_level = req.experience_level
         founder.location = req.location
-        founder.focus_areas = req.focusAreas
-        founder.linkedin_url = req.linkedinUrl
-        founder.company_name = req.companyName
-        founder.funding_stage = req.fundingStage
+        founder.focus_areas = req.focus_areas
+        founder.linkedin_url = req.linkedin_url
+        founder.company_name = req.company_name
+        founder.funding_stage = req.funding_stage
         founder.title = req.title
     db.session.commit()
-    return jsonify(FounderProfileSchema(
-        id=founder.id,
-        name=founder.name,
-        email=founder.email,
-        role=founder.role,
-        background=founder.background,
-        experienceLevel=founder.experience_level,
-        location=founder.location,
-        focusAreas=founder.focus_areas,
-        linkedinUrl=founder.linkedin_url,
-        companyName=founder.company_name,
-        fundingStage=founder.funding_stage,
-        title=founder.title,
-        createdAt=founder.created_at.isoformat() if founder.created_at else None,
-        updatedAt=founder.updated_at.isoformat() if founder.updated_at else None
-    ).model_dump(mode="json")), 200
+    return jsonify(founder_profile_to_dict(founder)), 200

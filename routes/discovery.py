@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify
 from datetime import datetime
 from models import FounderProfile
 from schemas.founder import FounderDiscoveryCard, DetailedFounderProfile
+from schemas import founder_profile_to_dict
 from utils.auth import require_auth
 from db import db
 
@@ -12,9 +13,10 @@ bp = Blueprint('discovery', __name__)
 def list_founders():
     # Query all founders from the database
     founders = FounderProfile.query.all()
-    # Convert to discovery cards (or just serialize as needed)
-    result = [
-        {
+    # Convert to discovery cards format
+    result = []
+    for f in founders:
+        result.append({
             'id': f.id,
             'name': f.name,
             'title': f.title,
@@ -30,9 +32,7 @@ def list_founders():
             'opportunities': None,
             'avatarUrl': f.linkedin_url,
             'lastUpdated': f.updated_at.isoformat() if f.updated_at else None
-        }
-        for f in founders
-    ]
+        })
     return jsonify(result), 200
 
 @bp.route('/discovery/founders/<founder_id>', methods=['GET'])
@@ -41,7 +41,8 @@ def get_founder(founder_id):
     founder = FounderProfile.query.get(founder_id)
     if not founder:
         return jsonify({'error': 'Not found'}), 404
-    # You can expand this to a detailed profile as needed
+
+    # Return detailed founder profile
     result = {
         'id': founder.id,
         'name': founder.name,
@@ -50,6 +51,7 @@ def get_founder(founder_id):
         'background': founder.background,
         'experienceLevel': founder.experience_level,
         'location': founder.location,
+        'focusAreas': founder.focus_areas,
         'linkedinUrl': founder.linkedin_url,
         'startupIdea': None,
         'traction': None,
